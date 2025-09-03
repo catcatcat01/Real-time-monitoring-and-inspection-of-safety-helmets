@@ -1,4 +1,3 @@
-# 8.14 ： 识别能力优化版（带本地缓存和并行处理）
 
 import cv2
 import time
@@ -663,3 +662,4 @@ class HardHatDetector:
             'total_frames': total_frames,
             'unauthorized_frames': sum(1 for r in results if r['has_unauthorized'])
         }
+
