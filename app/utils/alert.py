@@ -8,10 +8,10 @@ import cv2
 import numpy as np
 
 # 飞书应用配置
-FEISHU_APP_ID = "cli_a8e897b12f27500e"  # 替换为你的飞书应用ID
-FEISHU_APP_SECRET = "bQtAu5D4DuECIa4t5zK0je3QNqK4e5m8"  # 替换为你的飞书应用密钥
-FEISHU_RECEIVE_USER_IDS = ["10407843"]  # 接收告警的用户ID列表
-ALERT_COOLDOWN = 60000  # 告警冷却时间(秒)
+FEISHU_APP_ID = "************"  # 替换为你的飞书应用ID
+FEISHU_APP_SECRET = "***********"  # 替换为你的飞书应用密钥
+FEISHU_RECEIVE_USER_IDS = ["*******"]  # 接收告警的用户ID列表
+ALERT_COOLDOWN = 60  # 告警冷却时间(秒)
 
 # 缓存访问令牌和过期时间
 feishu_token_cache = {
@@ -87,7 +87,7 @@ def send_feishu_alert(detection_result, frame_image=None):
             success = cv2.imwrite(image_path, frame_image, [int(cv2.IMWRITE_JPEG_QUALITY), 85])
             if success:
                 # 生成可以通过Web访问的URL
-                base_url = current_app.config.get('BASE_URL', 'http://10.60.208.45:5000/')
+                base_url = current_app.config.get('BASE_URL', 'http://你的IP地址:端口号')
                 # 构造相对于RESULTS_FOLDER的路径
                 relative_path = os.path.relpath(image_path, current_app.config.get('RESULTS_FOLDER', 'results'))
                 image_url = f"{base_url}detection/results/{relative_path.replace(os.sep, '/')}"
@@ -98,7 +98,7 @@ def send_feishu_alert(detection_result, frame_image=None):
             current_app.logger.error(f"处理告警图像时出错: {e}")
 
     # 构建详情链接
-    base_url = current_app.config.get('BASE_URL', 'http://10.60.208.45:5000/')
+    base_url = current_app.config.get('BASE_URL', 'http://你的IP地址:端口号')
     detail_url = ""
     if 'filename' in detection_result and 'output_filename' in detection_result:
         detail_url = f"{base_url}/detection/process/{detection_result.get('filename')}?output={detection_result.get('output_filename')}"
@@ -223,3 +223,4 @@ def _send_to_single_user(access_token, user_id, content):
     except Exception as e:
         current_app.logger.error(f"发送飞书告警时出错，用户: {user_id}, 错误: {e}")
         return False
+
