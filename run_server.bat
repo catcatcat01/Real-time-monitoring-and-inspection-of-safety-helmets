@@ -1,4 +1,5 @@
 @echo off
 echo Starting Waitress Server...
-waitress-serve --listen=10.60.208.45:5000 app1:app
+waitress-serve --listen=0.0.0.0:8080 app1:app
+
 pause
