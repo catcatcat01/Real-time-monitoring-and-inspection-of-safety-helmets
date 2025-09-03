@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block title %}安全帽检测系统 - 首页{% endblock %}
+
+{% block content %}
+<!-- 英雄区域 -->
+<section class="hero-section bg-gradient-primary">
+    <div class="container">
+        <div class="row align-items-center min-vh-75">
+            <div class="col-lg-6">
+                <h1 class="display-3 fw-bold text-white mb-4">智能安全帽检测系统</h1>
+                <p class="lead text-light mb-4">
+                    基于先进的计算机视觉与人工智能技术，实时监测工作场所安全帽佩戴情况，保障人员安全，降低企业风险。
+                </p>
+                <div class="d-flex flex-wrap gap-3 mt-5">
+                    <a class="btn btn-light btn-lg rounded-pill px-4 py-3 fw-bold" href="{{ url_for('main.upload') }}" role="button">
+                        <i class="bi bi-cloud-upload me-2"></i> 视频检测
+                    </a>
+                    <a class="btn btn-outline-light btn-lg rounded-pill px-4 py-3 fw-bold" href="{{ url_for('detection.monitor_page') }}"  role="button">
+                        <i class="bi bi-camera-video me-2"></i> 实时监控
+                    </a>
+                    <!-- 新增：超脑监控按钮（与现有按钮风格统一） -->
+                    <a class="btn btn-outline-light btn-lg rounded-pill px-4 py-3 fw-bold" href="{{ url_for('superbrain.superbrain_monitor') }}"  role="button">
+                        <i class="bi bi-camera-video me-2"></i> 超脑监控
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 d-none d-lg-block">
+                <div class="hero-visual">
+                    <div class="visual-container">
+                        <div class="screen-card">
+                            <div class="screen-content">
+                                <div class="detection-animation">
+                                    <div class="worker with-helmet">
+                                        <div class="worker-avatar"></div>
+                                        <div class="helmet"></div>
+                                        <div class="status-indicator success"></div>
+                                    </div>
+                                    <div class="worker without-helmet">
+                                        <div class="worker-avatar"></div>
+                                        <div class="status-indicator danger"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- 功能特点 -->
+<section id="features" class="features-section py-7">
+    <div class="container">
+        <div class="text-center mb-7">
+            <h2 class="section-title">核心功能</h2>
+            <p class="section-subtitle">全方位保障工作场所安全</p>
+        </div>
+
+        <div class="row g-5">
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card card h-100 border-0 shadow-sm-hover">
+                    <div class="card-body p-4 text-center">
+                        <div class="feature-icon mx-auto mb-4">
+                            <i class="bi bi-camera-video"></i>
+                        </div>
+                        <h4 class="card-title mb-3">实时视频分析</h4>
+                        <p class="card-text">支持实时视频流分析，即时检测安全帽佩戴情况，发现违规立即报警。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card card h-100 border-0 shadow-sm-hover">
+                    <div class="card-body p-4 text-center">
+                        <div class="feature-icon mx-auto mb-4">
+                            <i class="bi bi-person-badge"></i>
+                        </div>
+                        <h4 class="card-title mb-3">人脸身份识别</h4>
+                        <p class="card-text">集成人脸识别技术，精准识别未佩戴安全帽人员身份，记录违规信息。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card card h-100 border-0 shadow-sm-hover">
+                    <div class="card-body p-4 text-center">
+                        <div class="feature-icon mx-auto mb-4">
+                            <i class="bi bi-clipboard-data"></i>
+                        </div>
+                        <h4 class="card-title mb-3">智能报告生成</h4>
+                        <p class="card-text">自动生成详细检测报告，包含时间点、人员信息和截图，支持导出与分享。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card card h-100 border-0 shadow-sm-hover">
+                    <div class="card-body p-4 text-center">
+                        <div class="feature-icon mx-auto mb-4">
+                            <i class="bi bi-bell"></i>
+                        </div>
+                        <h4 class="card-title mb-3">多方式警报</h4>
+                        <p class="card-text">支持声音、灯光、短信等多种警报方式，确保违规情况及时处理。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card card h-100 border-0 shadow-sm-hover">
+                    <div class="card-body p-4 text-center">
+                        <div class="feature-icon mx-auto mb-4">
+                            <i class="bi bi-diagram-3"></i>
+                        </div>
+                        <h4 class="card-title mb-3">多场景适配</h4>
+                        <p class="card-text">适用于建筑工地、工厂车间、矿山等多种工作环境，适应不同光照条件。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card card h-100 border-0 shadow-sm-hover">
+                    <div class="card-body p-4 text-center">
+                        <div class="feature-icon mx-auto mb-4">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <h4 class="card-title mb-3">安全合规</h4>
+                        <p class="card-text">符合国家安全标准，帮助企业满足监管要求，降低安全风险与责任。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 应用场景 -->
+<section class="application-section py-7 bg-light">
+    <div class="container">
+        <div class="text-center mb-7">
+            <h2 class="section-title">应用场景</h2>
+            <p class="section-subtitle">广泛应用于各类需要安全防护的行业</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="app-card">
+                    <div class="app-image construction"></div>
+                    <div class="app-content">
+                        <h4>建筑施工</h4>
+                        <p>建筑工地高空作业区域安全帽佩戴监测</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="app-card">
+                    <div class="app-image factory"></div>
+                    <div class="app-content">
+                        <h4>生产车间</h4>
+                        <p>工厂生产区域人员安全防护装备检查</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="app-card">
+                    <div class="app-image mining"></div>
+                    <div class="app-content">
+                        <h4>矿山作业</h4>
+                        <p>矿山开采区域人员安全准入检测</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+<style>
+    /* 保留需要模板变量的样式 */
+    .app-image.factory {
+        background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url("{{ url_for('static', filename='images/factory.jpg') }}");
+    }
+
+    .app-image.mining {
+        background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url("{{ url_for('static', filename='images/mining.jpg') }}");
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 添加滚动动画效果
+        const animatedElements = document.querySelectorAll('.feature-card, .app-card, .stat-item');
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = 1;
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, { threshold: 0.1 });
+
+        animatedElements.forEach(el => {
+            el.style.opacity = 0;
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            observer.observe(el);
+        });
+    });
+</script>
+{% endblock %}

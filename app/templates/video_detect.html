@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}实时检测 - 安全帽检测系统{% endblock %}
+
+{% block extra_css %}
+<style>
+.detect-container { max-width: 1200px; margin: 0 auto; }
+.video-player { width: 100%; background: #000; border-radius: 8px; overflow: hidden; position: relative; }
+#detectFrame { width: 100%; height: auto; }
+.status-bar { margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; }
+.status-item { margin-right: 30px; font-size: 16px; }
+.status-item span { font-weight: bold; }
+.loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; z-index: 10; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detect-container">
+    <div class="mb-4 d-flex justify-content-between align-items-center">
+        <h2>实时检测中</h2>
+        <a href="{{ url_for('main.upload') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> 返回上传
+        </a>
+    </div>
+
+    <!-- 视频播放区域 -->
+    <div class="video-player">
+        <!-- 加载覆盖层 -->
+        <div id="loadingOverlay" class="loading-overlay">
+            <div class="spinner-border spinner-border-lg" role="status">
+                <span class="visually-hidden">加载中...</span>
+            </div>
+            <h4 class="mt-3">模型初始化中，即将开始检测...</h4>
+        </div>
+        <!-- 实时检测帧 -->
+        <img id="detectFrame" src="" alt="实时检测画面">
+    </div>
+
+    <!-- 检测状态栏 -->
+    <div class="status-bar">
+        <span class="status-item">当前时间: <span id="currentTime">00:00:00</span></span>
+        <span class="status-item">总人数: <span id="totalPeople">0</span></span>
+        <span class="status-item text-danger">未佩戴安全帽: <span id="unauthorizedCount">0</span></span>
+        <span class="status-item text-success">佩戴安全帽: <span id="authorizedCount">0</span></span>
+        <span class="status-item">识别人员: <span id="recognizedPeople">-</span></span>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    const filename = "{{ filename }}";
+    const frameImg = $('#detectFrame');
+    const loadingOverlay = $('#loadingOverlay');
+    const statusEls = {
+        time: $('#currentTime'),
+        total: $('#totalPeople'),
+        unauthorized: $('#unauthorizedCount'),
+        authorized: $('#authorizedCount'),
+        people: $('#recognizedPeople')
+    };
+
+    // 建立SSE连接，接收实时帧数据
+    const eventSource = new EventSource("{{ url_for('detection.stream_detect', filename=filename) }}");
+
+    // 接收帧数据并更新页面
+    eventSource.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        switch(data.type) {
+            case 'frame':
+                // 隐藏加载层，更新画面和状态
+                loadingOverlay.hide();
+                frameImg.attr('src', data.frameData);
+                statusEls.time.text(data.timeStr);
+                statusEls.total.text(data.totalDetections);
+                statusEls.unauthorized.text(data.unauthorizedCount);
+                statusEls.authorized.text(data.authorizedCount);
+                // 处理识别人员（去重+过滤未知）
+                const people = [...new Set(data.faces.map(f => f.name))].filter(n => n !== '未知人员');
+                statusEls.people.text(people.length ? people.join(', ') : '未知');
+                break;
+            case 'end':
+                // 检测结束，跳结果页
+                eventSource.close();
+                alert('实时检测完成，即将跳转到结果页面');
+                window.location.href = "{{ url_for('detection.process', filename=filename) }}?output=" + data.outputFilename;
+                break;
+            case 'error':
+                // 错误处理
+                eventSource.close();
+                loadingOverlay.html(`<h4 class="text-danger">检测出错: ${data.message}</h4>`);
+                alert('检测出错: ' + data.message);
+                break;
+        }
+    };
+
+    // SSE连接错误处理
+    eventSource.onerror = function() {
+        eventSource.close();
+        loadingOverlay.html(`<h4 class="text-danger">连接失败，请刷新页面重试</h4>`);
+    };
+
+    // 页面关闭时释放连接
+    window.onbeforeunload = () => eventSource.close();
+});
+</script>
+{% endblock %}

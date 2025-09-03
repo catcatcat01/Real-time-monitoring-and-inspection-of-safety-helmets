@@ -1,0 +1,218 @@
+:root {
+    --primary: #2c5aa0;
+    --primary-dark: #1e3c72;
+    --secondary: #ffc107;
+    --light: #f8f9fa;
+    --dark: #212529;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+}
+
+.min-vh-75 {
+    min-height: 75vh;
+}
+
+.py-7 {
+    padding-top: 5rem;
+    padding-bottom: 5rem;
+}
+
+.section-title {
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 1rem;
+    position: relative;
+    display: inline-block;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 3px;
+    background: var(--primary);
+}
+
+.section-subtitle {
+    color: #6c757d;
+    font-size: 1.1rem;
+}
+
+/* 英雄区域样式 */
+.hero-visual {
+    position: relative;
+    perspective: 1000px;
+}
+
+.visual-container {
+    position: relative;
+    transform-style: preserve-3d;
+    animation: float 6s ease-in-out infinite;
+}
+
+.screen-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.screen-content {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.detection-animation {
+    display: flex;
+    gap: 40px;
+}
+
+.worker {
+    position: relative;
+    width: 100px;
+    height: 150px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.worker-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #e9ecef;
+    position: relative;
+    z-index: 2;
+}
+
+.helmet {
+    width: 70px;
+    height: 60px;
+    background: #ffc107;
+    border-radius: 50% 50% 40% 40%;
+    position: absolute;
+    top: -15px;
+    z-index: 1;
+}
+
+.status-indicator {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    margin-top: 15px;
+}
+
+.status-indicator.success {
+    background: #28a745;
+    box-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
+}
+
+.status-indicator.danger {
+    background: #dc3545;
+    box-shadow: 0 0 10px rgba(220, 53, 69, 0.5);
+}
+
+/* 特性卡片样式 */
+.feature-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(44, 90, 160, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    font-size: 2rem;
+}
+
+.shadow-sm-hover {
+    transition: all 0.3s ease;
+}
+
+.shadow-sm-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 应用场景卡片 */
+.app-card {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.app-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.app-image {
+    height: 200px;
+    background-size: cover;
+    background-position: center;
+}
+
+.app-image.construction {
+    background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1541888946425-d81bb19240f5?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=60');
+}
+
+.app-content {
+    padding: 1.5rem;
+}
+
+.app-content h4 {
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+}
+
+/* 动画 */
+@keyframes float {
+    0%, 100% { transform: translateY(0) rotate3d(0.5, 1, 0, 3deg); }
+    50% { transform: translateY(-15px) rotate3d(0.5, 1, 0, -3deg); }
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .display-3 {
+        font-size: 2.5rem;
+    }
+
+    .detection-animation {
+        gap: 20px;
+    }
+
+    .worker {
+        width: 80px;
+        height: 120px;
+    }
+
+    .worker-avatar {
+        width: 50px;
+        height: 50px;
+    }
+
+    .helmet {
+        width: 60px;
+        height: 50px;
+        top: -12px;
+    }
+    /* 响应式下按钮换行显示，保持间距 */
+    .d-flex.flex-wrap.gap-3 > .btn {
+        flex: 1 1 auto;
+        min-width: 180px;
+    }
+}

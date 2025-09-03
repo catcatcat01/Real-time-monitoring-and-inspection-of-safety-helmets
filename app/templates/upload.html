@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}视频上传 - 安全帽检测系统{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">上传视频文件</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                    <div class="mb-3">
+                        <label for="videoFile" class="form-label">选择视频文件</label>
+                        <input class="form-control" type="file" id="videoFile" name="video"
+                               accept=".mp4,.avi,.mov,.mkv" required>
+                        <div class="form-text">支持的格式: MP4, AVI, MOV, MKV</div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <strong>提示:</strong> 视频处理时间取决于视频长度和服务器性能，请耐心等待
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <span id="btnText">开始检测</span>
+                            <span id="loadingSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('#uploadForm').submit(function(e) {
+        e.preventDefault(); // 阻止默认表单提交
+        const formData = new FormData(this);
+        const $submitBtn = $('#submitBtn');
+        const $btnText = $('#btnText');
+        const $spinner = $('#loadingSpinner');
+
+        // 显示上传状态
+        $submitBtn.prop('disabled', true);
+        $btnText.text('上传中...');
+        $spinner.removeClass('d-none');
+
+        // 异步上传视频到新接口
+        $.ajax({
+            url: "{{ url_for('detection.api_upload') }}",
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function(response) {
+                if (response.status === 'success') {
+                    // 上传成功，跳转到实时检测页
+                    window.location.href = "{{ url_for('detection.video_detect', filename='') }}" + response.filename;
+                } else {
+                    alert('上传失败: ' + response.error);
+                    resetBtn();
+                }
+            },
+            error: function(xhr, status, error) {
+                alert('上传出错: ' + error);
+                resetBtn();
+            }
+        });
+
+        // 重置按钮状态
+        function resetBtn() {
+            $submitBtn.prop('disabled', false);
+            $btnText.text('开始检测');
+            $spinner.addClass('d-none');
+        }
+    });
+});
+</script>
+{% endblock %}

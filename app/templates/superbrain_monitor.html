@@ -1,0 +1,538 @@
+{% extends "base.html" %}
+
+{% block title %}超脑监控 - 安全帽检测系统{% endblock %}
+
+{% block content %}
+<div class="card shadow-lg">
+    <!-- 卡片头部：设备选择下拉框 -->
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <div>
+            <h4 class="mb-0">超脑实时监控</h4>
+            <p class="mb-0" id="currentDeviceLocation">监控区域：--</p>
+        </div>
+        <!-- 设备选择器 -->
+        <div class="ms-3">
+            <select id="deviceSelector" class="form-select form-select-sm text-dark" style="width: auto;">
+                <option value="1">超脑设备1（{{ config.SUPERBRAIN1_MONITOR_LOCATION }}）</option>
+                <option value="2">超脑设备2（{{ config.SUPERBRAIN2_MONITOR_LOCATION }}）</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- 卡片-body：视频+控制区 -->
+    <div class="card-body">
+        <div class="row g-4">
+            <!-- 左侧：视频播放区 -->
+            <div class="col-lg-8">
+                <div class="border rounded-lg overflow-hidden bg-black" style="position: relative;">
+                    <img id="monitorFrame" src="" alt="超脑监控画面" class="w-100" style="min-height: 500px; object-fit: contain;">
+                    <div id="loadingTip" class="position-absolute top-50 start-50 translate-middle text-white fs-3">
+                        正在连接超脑设备...
+                    </div>
+                    <div id="errorTip" class="position-absolute top-50 start-50 translate-middle text-danger fs-3 d-none">
+                        连接失败，请检查设备状态
+                    </div>
+                </div>
+
+                <!-- 检测统计信息 -->
+                <div class="mt-3 row g-2 text-center">
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h5 class="card-title">当前设备</h5>
+                                <p id="currentDeviceEl" class="card-text fs-3">设备1</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h5 class="card-title">当前通道</h5>
+                                <p id="currentChannel" class="card-text fs-3">--</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h5 class="card-title">未佩戴人数</h5>
+                                <p id="unauthorizedCount" class="card-text fs-3 text-danger">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h5 class="card-title">设备状态</h5>
+                                <p id="deviceStatus" class="card-text fs-3 text-warning">连接中</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：通道控制区 -->
+            <div class="col-lg-4">
+                <div class="card bg-light h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0">通道切换</h5>
+                    </div>
+                    <div class="card-body d-flex flex-column" style="max-height: 600px;">
+                        <div id="channelButtons" class="d-flex flex-wrap gap-1.5 flex-grow-1 overflow-auto mb-2">
+                            <div class="w-100 text-center text-muted py-3">
+                                等待设备通道信息...
+                            </div>
+                        </div>
+
+                        <!-- 分页控制区 -->
+                        <div id="paginationControls" class="d-none">
+                            <div class="d-flex align-items-center justify-content-between flex-nowrap gap-1" style="min-width: 0;">
+                                <div class="btn-group" role="group" style="flex: 0 0 auto;">
+                                    <button id="firstPageBtn" class="btn btn-xs btn-outline-secondary px-2 py-1" title="首页">首页</button>
+                                    <button id="prevPageBtn" class="btn btn-xs btn-outline-secondary px-2 py-1" title="上一页">上一页</button>
+                                </div>
+                                <div class="text-center text-muted small" style="flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    第 <span id="currentPage" class="text-primary fw-bold">1</span> 页 / 共 <span id="totalPages" class="text-primary fw-bold">0</span> 页
+                                </div>
+                                <div class="btn-group" role="group" style="flex: 0 0 auto;">
+                                    <button id="nextPageBtn" class="btn btn-xs btn-outline-secondary px-2 py-1" title="下一页">下一页</button>
+                                    <button id="lastPageBtn" class="btn btn-xs btn-outline-secondary px-2 py-1" title="尾页">尾页</button>
+                                </div>
+                            </div>
+                            <div class="text-center mt-1 text-muted xsmall">
+                                每页50个 / 共 <span id="totalChannels" class="fw-bold">0</span> 个通道
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // DOM元素
+    const deviceSelector = document.getElementById('deviceSelector');
+    const currentDeviceLocation = document.getElementById('currentDeviceLocation');
+    const currentDeviceEl = document.getElementById('currentDeviceEl');
+    const monitorFrame = document.getElementById('monitorFrame');
+    const loadingTip = document.getElementById('loadingTip');
+    const errorTip = document.getElementById('errorTip');
+    const currentChannelEl = document.getElementById('currentChannel');
+    const unauthorizedCountEl = document.getElementById('unauthorizedCount');
+    const deviceStatusEl = document.getElementById('deviceStatus');
+    const channelButtonsEl = document.getElementById('channelButtons');
+
+    // 分页控件元素
+    const paginationControls = document.getElementById('paginationControls');
+    const firstPageBtn = document.getElementById('firstPageBtn');
+    const prevPageBtn = document.getElementById('prevPageBtn');
+    const nextPageBtn = document.getElementById('nextPageBtn');
+    const lastPageBtn = document.getElementById('lastPageBtn');
+    const currentPageEl = document.getElementById('currentPage');
+    const totalPagesEl = document.getElementById('totalPages');
+    const totalChannelsEl = document.getElementById('totalChannels');
+
+    // 核心配置：多设备独立状态缓存（关键：每个设备保存完整分页状态）
+    const PAGE_SIZE = 50;
+    const PER_ROW_COUNT = 5;
+    const BUTTON_WIDTH = `${120 / PER_ROW_COUNT}%`;
+    const deviceCache = {
+        1: {
+            totalChannels: 0,
+            currentPage: 1,    // 设备1独立的当前页码
+            totalPages: 0,
+            lastKnownChannel: 1 // 设备1上次使用的通道
+        },
+        2: {
+            totalChannels: 0,
+            currentPage: 1,    // 设备2独立的当前页码
+            totalPages: 0,
+            lastKnownChannel: 1 // 设备2上次使用的通道
+        }
+    };
+    let currentDevice = parseInt(deviceSelector.value);
+    let currentChannel = 1;
+    let sse = null;
+    let isConnecting = false;
+    let channelInfoTimeout = null;
+
+    // 初始化：连接默认设备
+    initDevice(currentDevice);
+
+    // 设备选择器切换事件
+    deviceSelector.addEventListener('change', function() {
+        const newDevice = parseInt(this.value);
+        if (newDevice === currentDevice) return;
+        switchDevice(newDevice);
+    });
+
+    /**
+     * 切换设备核心逻辑：
+     * 1. 保存当前设备的最后状态（当前页、当前通道）
+     * 2. 释放前设备资源
+     * 3. 初始化新设备（加载新设备的独立分页状态）
+     */
+    function switchDevice(newDevice) {
+        if (isConnecting) return;
+
+        // 1. 保存当前设备的最后状态（关键：避免切换后状态丢失）
+        deviceCache[currentDevice].lastKnownChannel = currentChannel;
+        deviceCache[currentDevice].currentPage = parseInt(currentPageEl.textContent) || 1;
+
+        isConnecting = true;
+        const oldDevice = currentDevice;
+        currentDevice = newDevice;
+        resetUI();
+
+        // 清除超时检测
+        if (channelInfoTimeout) {
+            clearTimeout(channelInfoTimeout);
+            channelInfoTimeout = null;
+        }
+
+        // 2. 关闭当前SSE连接
+        if (sse) {
+            sse.close();
+            sse = null;
+            console.log(`已关闭设备${oldDevice}的SSE连接`);
+        }
+
+        // 3. 主动释放前设备资源（双保险）
+        fetch("{{ url_for('superbrain.release_device') }}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ device: oldDevice })
+        }).then(res => res.json())
+          .then(data => {
+              console.log(`设备${oldDevice}资源释放结果:`, data);
+              // 4. 初始化新设备（加载新设备的独立状态）
+              initDevice(newDevice);
+          }).catch(err => {
+              console.error(`释放设备${oldDevice}资源失败:`, err);
+              initDevice(newDevice);
+          });
+    }
+
+    /**
+     * 初始化设备：
+     * 1. 加载该设备的独立缓存状态（当前页、最后通道）
+     * 2. 建立SSE连接
+     * 3. 基于缓存的currentPage生成通道按钮（关键：解决分页异常）
+     */
+    function initDevice(device) {
+        // 1. 加载该设备的独立缓存状态（关键：恢复上次的分页位置）
+        const deviceState = deviceCache[device];
+        currentChannel = deviceState.lastKnownChannel || 1;
+        const targetPage = deviceState.currentPage || 1;
+
+        // 2. 更新UI基础信息
+        loadingTip.textContent = `正在连接超脑设备${device}...`;
+        loadingTip.classList.remove('d-none');
+        deviceStatusEl.textContent = '连接中';
+        deviceStatusEl.className = 'card-text fs-3 text-warning';
+        currentDeviceEl.textContent = `设备${device}`;
+        currentDeviceLocation.textContent = `监控区域：${device === 1 ? '{{ config.SUPERBRAIN1_MONITOR_LOCATION }}' : '{{ config.SUPERBRAIN2_MONITOR_LOCATION }}'}`;
+        currentChannelEl.textContent = currentChannel; // 恢复上次通道显示
+
+        // 3. 建立SSE连接
+        const sseUrl = new URL("{{ url_for('superbrain.stream_detect') }}", window.location.origin);
+        sseUrl.searchParams.set('device', device);
+
+        sse = new EventSource(sseUrl.toString());
+        isConnecting = false;
+
+        // 4. 通道信息超时检测（10秒未加载则主动请求）
+        channelInfoTimeout = setTimeout(() => {
+            if (deviceState.totalChannels === 0) {
+                console.warn(`设备${device}通道信息获取超时，主动请求`);
+                fetchChannelInfo(device);
+            }
+        }, 10000);
+
+        // 5. SSE消息处理
+        sse.onmessage = function(e) {
+            try {
+                const data = JSON.parse(e.data);
+                switch(data.type) {
+                    case 'frame':
+                        // 更新视频帧
+                        if (data.frameData) {
+                            monitorFrame.src = data.frameData;
+                            loadingTip.classList.add('d-none');
+                            errorTip.classList.add('d-none');
+                            deviceStatusEl.textContent = '正常';
+                            deviceStatusEl.className = 'card-text fs-3 text-success';
+                        }
+
+                        // 更新实时统计
+                        currentChannel = data.currentChannel || currentChannel;
+                        currentChannelEl.textContent = currentChannel;
+                        unauthorizedCountEl.textContent = data.unauthorizedCount || 0;
+
+                        // 6. 处理通道分页信息（关键：基于当前设备缓存更新）
+                        if (data.totalChannels !== undefined) {
+                            clearTimeout(channelInfoTimeout);
+                            deviceState.totalChannels = data.totalChannels;
+
+                            // 初始化分页计算
+                            initPagination(device);
+
+                            // 基于设备缓存的currentPage生成按钮（核心修复点）
+                            generateChannelButtons(device, deviceState.currentPage);
+
+                            // 更新按钮选中状态（匹配当前通道）
+                            updateChannelButtonState(device);
+                        }
+                        break;
+
+                    case 'error':
+                        loadingTip.classList.add('d-none');
+                        errorTip.textContent = `设备${device}错误: ${data.message}`;
+                        errorTip.classList.remove('d-none');
+                        deviceStatusEl.textContent = '错误';
+                        deviceStatusEl.className = 'card-text fs-3 text-danger';
+                        break;
+
+                    case 'end':
+                        deviceStatusEl.textContent = '已停止';
+                        deviceStatusEl.className = 'card-text fs-3 text-muted';
+                        sse.close();
+                        break;
+                }
+            } catch (err) {
+                console.error(`设备${device}SSE解析失败:`, err);
+                errorTip.textContent = `消息格式错误（设备${device}）`;
+                errorTip.classList.remove('d-none');
+            }
+        };
+
+        sse.onerror = function() {
+            loadingTip.classList.add('d-none');
+            errorTip.textContent = `设备${device}连接异常，请重试`;
+            errorTip.classList.remove('d-none');
+            deviceStatusEl.textContent = '连接异常';
+            deviceStatusEl.className = 'card-text fs-3 text-danger';
+            sse.close();
+            isConnecting = false;
+        };
+
+        sse.onclose = function() {
+            console.log(`设备${device}SSE连接关闭`);
+            if (!isConnecting) {
+                deviceStatusEl.textContent = '已断开';
+                deviceStatusEl.className = 'card-text fs-3 text-muted';
+            }
+        };
+    }
+
+    /**
+     * 主动请求通道信息（超时/异常时兜底）
+     */
+    function fetchChannelInfo(device) {
+        fetch("{{ url_for('superbrain.get_channels') }}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ device: device })
+        })
+        .then(res => {
+            if (!res.ok) throw new Error(`HTTP错误: ${res.status}`);
+            return res.json();
+        })
+        .then(data => {
+            if (data.status === 'success' && data.totalChannels) {
+                const deviceState = deviceCache[device];
+                deviceState.totalChannels = data.totalChannels;
+                initPagination(device);
+                // 基于缓存的currentPage生成按钮（保持分页位置）
+                generateChannelButtons(device, deviceState.currentPage);
+                updateChannelButtonState(device);
+            } else {
+                channelButtonsEl.innerHTML = `<div class="w-100 text-center text-danger py-3">获取通道信息失败: ${data.message || '未知错误'}</div>`;
+            }
+        })
+        .catch(err => {
+            channelButtonsEl.innerHTML = `<div class="w-100 text-center text-danger py-3">获取通道信息失败: ${err.message}</div>`;
+        });
+    }
+
+    /**
+     * 初始化分页计算（基于当前设备状态）
+     */
+    function initPagination(device) {
+        const deviceState = deviceCache[device];
+        if (deviceState.totalChannels === 0) return;
+
+        // 计算总页数（基于当前设备的通道数）
+        deviceState.totalPages = Math.max(1, Math.ceil(deviceState.totalChannels / PAGE_SIZE));
+
+        // 确保当前页在有效范围（防止越界）
+        if (deviceState.currentPage > deviceState.totalPages) {
+            deviceState.currentPage = deviceState.totalPages;
+        }
+
+        // 更新分页控件显示（绑定当前设备状态）
+        totalChannelsEl.textContent = deviceState.totalChannels;
+        totalPagesEl.textContent = deviceState.totalPages;
+        currentPageEl.textContent = deviceState.currentPage;
+
+        // 显示分页控件并更新按钮状态
+        paginationControls.classList.remove('d-none');
+        updatePaginationButtons(device);
+    }
+
+    /**
+     * 更新分页按钮状态（基于当前设备的currentPage）
+     */
+    function updatePaginationButtons(device) {
+        const deviceState = deviceCache[device];
+        const isFirstPage = deviceState.currentPage === 1;
+        const isLastPage = deviceState.currentPage === deviceState.totalPages;
+
+        [firstPageBtn, prevPageBtn].forEach(btn => {
+            btn.disabled = isFirstPage || isConnecting;
+            btn.classList.toggle('opacity-50', isFirstPage || isConnecting);
+        });
+        [nextPageBtn, lastPageBtn].forEach(btn => {
+            btn.disabled = isLastPage || isConnecting;
+            btn.classList.toggle('opacity-50', isLastPage || isConnecting);
+        });
+    }
+
+    /**
+     * 生成通道按钮（强制基于当前设备的currentPage）
+     */
+    function generateChannelButtons(device, targetPage) {
+        const deviceState = deviceCache[device];
+        if (deviceState.totalChannels === 0) {
+            channelButtonsEl.innerHTML = '<div class="w-100 text-center text-muted py-3">没有可用通道</div>';
+            return;
+        }
+
+        // 基于目标页计算通道范围（关键：不依赖全局变量，只使用当前设备状态）
+        const startChannel = (targetPage - 1) * PAGE_SIZE + 1;
+        const endChannel = Math.min(targetPage * PAGE_SIZE, deviceState.totalChannels);
+
+        // 生成按钮
+        channelButtonsEl.innerHTML = '';
+        for (let i = startChannel; i <= endChannel; i++) {
+            const btn = document.createElement('button');
+            btn.style.width = BUTTON_WIDTH;
+            btn.className = `btn btn-xs ${i === currentChannel ? 'btn-primary' : 'btn-outline-primary'} ${isConnecting ? 'opacity-50' : ''}`;
+            btn.textContent = `通道 ${i}`;
+            btn.disabled = isConnecting;
+            btn.onclick = () => switchToChannel(device, i);
+            channelButtonsEl.appendChild(btn);
+        }
+    }
+
+    /**
+     * 更新通道按钮选中状态（匹配当前通道）
+     */
+    function updateChannelButtonState(device) {
+        const buttons = document.querySelectorAll('#channelButtons .btn');
+        if (buttons.length === 0) return;
+
+        buttons.forEach(btn => {
+            const btnChan = parseInt(btn.textContent.trim().replace('通道 ', ''));
+            btn.className = `btn btn-xs ${btnChan === currentChannel ? 'btn-primary' : 'btn-outline-primary'} ${isConnecting ? 'opacity-50' : ''}`;
+        });
+    }
+
+    /**
+     * 切换通道（更新当前设备的lastKnownChannel和currentPage）
+     */
+    function switchToChannel(device, channel) {
+        if (isConnecting) {
+            alert('设备连接中，暂无法切换通道');
+            return;
+        }
+
+        fetch("{{ url_for('superbrain.switch_channel') }}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ device: device, channel: channel })
+        })
+        .then(res => {
+            if (!res.ok) throw new Error(`HTTP错误: ${res.status}`);
+            return res.json();
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                const deviceState = deviceCache[device];
+                currentChannel = data.currentChannel;
+                deviceState.lastKnownChannel = currentChannel; // 保存当前设备的最后通道
+                currentChannelEl.textContent = currentChannel;
+
+                // 计算目标页并更新（基于当前设备的通道）
+                const targetPage = Math.ceil(currentChannel / PAGE_SIZE);
+                if (targetPage !== deviceState.currentPage) {
+                    deviceState.currentPage = targetPage; // 更新当前设备的currentPage
+                    currentPageEl.textContent = targetPage;
+                    generateChannelButtons(device, targetPage);
+                    updatePaginationButtons(device);
+                } else {
+                    updateChannelButtonState(device);
+                }
+            } else {
+                alert(`设备${device}切换通道失败：${data.message}`);
+            }
+        })
+        .catch(err => {
+            alert(`设备${device}切换通道失败，请重试: ${err.message}`);
+        });
+    }
+
+    /**
+     * 处理分页页码变化（仅更新当前设备的currentPage）
+     */
+    function handlePageChange(targetPage) {
+        const deviceState = deviceCache[currentDevice];
+        if (targetPage < 1 || targetPage > deviceState.totalPages || isConnecting) return;
+
+        // 仅更新当前设备的currentPage（关键：不影响其他设备）
+        deviceState.currentPage = targetPage;
+        currentPageEl.textContent = targetPage;
+        generateChannelButtons(currentDevice, targetPage);
+        updatePaginationButtons(currentDevice);
+    }
+
+    // 分页按钮事件绑定
+    firstPageBtn.addEventListener('click', () => handlePageChange(1));
+    prevPageBtn.addEventListener('click', () => handlePageChange(deviceCache[currentDevice].currentPage - 1));
+    nextPageBtn.addEventListener('click', () => handlePageChange(deviceCache[currentDevice].currentPage + 1));
+    lastPageBtn.addEventListener('click', () => handlePageChange(deviceCache[currentDevice].totalPages));
+
+    /**
+     * 重置UI（切换设备时清空临时状态）
+     */
+    function resetUI() {
+        monitorFrame.src = '';
+        errorTip.classList.add('d-none');
+        currentChannelEl.textContent = '--';
+        unauthorizedCountEl.textContent = '0';
+        channelButtonsEl.innerHTML = '<div class="w-100 text-center text-muted py-3">等待设备通道信息...</div>';
+        paginationControls.classList.add('d-none');
+    }
+
+    /**
+     * 页面关闭时保存状态并释放资源
+     */
+    window.addEventListener('beforeunload', () => {
+        if (sse) sse.close();
+        // 保存当前设备的最后状态
+        deviceCache[currentDevice].lastKnownChannel = currentChannel;
+        deviceCache[currentDevice].currentPage = parseInt(currentPageEl.textContent) || 1;
+        // 释放资源
+        fetch("{{ url_for('superbrain.release_device') }}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ device: currentDevice })
+        });
+    });
+});
+</script>
+{% endblock %}
