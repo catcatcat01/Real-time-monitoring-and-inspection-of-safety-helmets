@@ -30,11 +30,7 @@ def get_known_faces():
     try:
         # 执行用户提供的SQL查询
         cursor.execute("""
-            select code, name, 'http://10.66.102.120/pic'||b.person_picture_path imgPath 
-            from tbl_person a 
-            join tbl_person_picture b on a.code = b.person_code 
-            and b.person_picture_path is not null 
-            where end_time >= NOW() 
+            // SQL查询
             
         """)
         faces = cursor.fetchall()
